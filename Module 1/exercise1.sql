@@ -31,10 +31,10 @@ SELECT nombre, ROUND(precio,0) AS precio FROM producto;
 SELECT nombre, TRUNCATE(precio, 0) as precio_int  FROM producto; 
 
 --11 Llista el codi dels fabricants que tenen productes en la taula "producto".
-SELECT fabricante.codigo FROM fabricante INNER JOIN producto ON producto.codigo_fabricante = fabricante.codigo;
+SELECT codigo_fabricante FROM producto;
 
 --12 Llista el codi dels fabricants que tenen productes en la taula "producto", eliminant els codis que apareixen repetits.
-SELECT DISTINCT fabricante.codigo FROM fabricante INNER JOIN producto ON producto.codigo_fabricante = fabricante.codigo;
+SELECT DISTINCT codigo_fabricante FROM producto;
 
 --13 Llista els noms dels fabricants ordenats de manera ascendent.
 SELECT nombre FROM fabricante ORDER BY nombre ;
@@ -85,7 +85,7 @@ SELECT * FROM producto INNER JOIN fabricante ON fabricante.codigo=producto.codig
 SELECT * FROM producto INNER JOIN fabricante ON fabricante.codigo=producto.codigo_fabricante WHERE fabricante.nombre = "Asus" OR  fabricante.nombre = "Seagate" OR fabricante.nombre = "Hewlett-Packard";
 
 --29 Retorna un llistat amb tots els productes dels fabricants Asus, Hewlett-Packard i Seagate. Usant l'operador IN.
-SELECT * FROM producto INNER JOIN fabricante ON fabricante.codigo=producto.codigo_fabricante WHERE producto.codigo_fabricante IN (1,3,5);
+SELECT producto.nombre AS nombre_producto , fabricante.nombre AS nombre_fabricante FROM producto JOIN fabricante  ON producto.codigo_fabricante = fabricante.codigo WHERE fabricante.nombre IN ('Asus', 'Hewlett-Packard', 'Seagate');
 
 --30 Retorna un llistat amb el nom i el preu de tots els productes dels fabricants el nom dels quals acabi per la vocal e.
 SELECT producto.nombre,producto.precio,fabricante.nombre AS fabricante FROM producto INNER JOIN fabricante ON fabricante.codigo=producto.codigo_fabricante WHERE fabricante.nombre LIKE '%e';
@@ -155,23 +155,22 @@ SELECT DISTINCT alumno.id_alumno , persona.apellido1 ,persona.apellido2, persona
 ----------------------------------LEFT RIGHT JOIN------------------------
 
 --1 Retorna un llistat amb els noms de tots els professors/es i els departaments que tenen vinculats/des. El llistat també ha de mostrar aquells professors/es que no tenen cap departament associat. El llistat ha de retornar quatre columnes, nom del departament, primer cognom, segon cognom i nom del professor/a. El resultat estarà ordenat alfabèticament de menor a major pel nom del departament, cognoms i el nom.
-SELECT dep.nombre AS nombre_departamento, persona.apellido1, persona.apellido2, persona.nombre AS nombre_profesor FROM persona INNER JOIN profesor prof ON persona.id = prof.id_profesor LEFT JOIN departamento dep ON prof.id_departamento = dep.id WHERE persona.tipo = 'profesor' ORDER BY nombre_departamento , persona.apellido1 , persona.apellido2 , nombre_profesor ;    
+SELECT dep.nombre AS nombre_departamento, persona.apellido1, persona.apellido2, persona.nombre AS nombre_profesor FROM profesor prof LEFT JOIN departamento dep ON prof.id_departamento = dep.id JOIN persona ON persona.id = prof.id_profesor ORDER BY nombre_departamento,persona.apellido1,persona.apellido2,nombre_profesor;
 
 --2 Retorna un llistat amb els professors/es que no estan associats a un departament.
-SELECT persona.apellido1 , persona.apellido2 , persona.nombre FROM persona LEFT JOIN profesor prof ON prof.id_profesor = persona.id LEFT JOIN departamento dep ON dep.id = prof.id_departamento WHERE dep.nombre IS NULL;
+SELECT persona.apellido1 , persona.apellido2 , persona.nombre FROM persona LEFT JOIN profesor prof ON prof.id_profesor = persona.id LEFT JOIN departamento dep ON dep.id = prof.id_departamento WHERE dep.nombre IS NULL AND persona.tipo = 'profesor';
 
 --3 Retorna un llistat amb els departaments que no tenen professors/es associats.
 SELECT dep.nombre FROM profesor prof RIGHT JOIN departamento dep ON dep.id = prof.id_departamento WHERE prof.id_profesor IS NULL;
 
 --4 Retorna un llistat amb els professors/es que no imparteixen cap assignatura.
-SELECT persona.apellido1, persona.apellido2, persona.nombre FROM persona JOIN profesor prof ON persona.id = prof.id_profesor LEFT JOIN asignatura ON prof.id_profesor = asignatura.id_profesor WHERE asignatura.id IS NULL;
+SELECT persona.apellido1, persona.apellido2, persona.nombre FROM persona LEFT JOIN profesor prof ON persona.id = prof.id_profesor LEFT JOIN asignatura ON prof.id_profesor = asignatura.id_profesor WHERE asignatura.id IS NULL AND persona.tipo = 'profesor';
 
 --5 Retorna un llistat amb les assignatures que no tenen un professor/a assignat.
 SELECT asignatura.id , asignatura.nombre AS nombre_asignatura FROM asignatura LEFT JOIN profesor ON profesor.id_profesor = asignatura.id_profesor WHERE asignatura.id_profesor IS NULL;
 
 --6 Retorna un llistat amb tots els departaments que no han impartit assignatures en cap curs escolar.
-SELECT DISTINCT dep.nombre FROM departamento dep LEFT JOIN profesor prof ON dep.id = prof.id_departamento LEFT JOIN asignatura asi ON prof.id_profesor = asi.id_profesor LEFT JOIN alumno_se_matricula_asignatura alumno ON asi.id = alumno.id_asignatura WHERE alumno.id_asignatura IS NULL;
-
+SELECT dep.nombre FROM departamento dep LEFT JOIN profesor prof ON dep.id = prof.id_departamento LEFT JOIN asignatura asi ON prof.id_profesor = asi.id_profesor LEFT JOIN alumno_se_matricula_asignatura alumno ON asi.id = alumno.id_asignatura GROUP BY dep.nombre HAVING COUNT(alumno.id_asignatura) = 0;
 ------------ CONSULTES RESUM -----------------------------
 
 --1 Retorna el nombre total d'alumnes que hi ha.
